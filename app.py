@@ -124,7 +124,7 @@ def handle_message(event):
             if not user_orders[user_id]:
                 reply_text = f"已刪除「{item_to_remove}」，目前清單是空的。"
             else:
-                reply_lines = ["目前點菜清單："]
+                reply_lines = ["目前清單："]
                 for index, order in enumerate(user_orders[user_id], start=1):
                     reply_lines.append(f"{index}. {order}")
                 reply_text = "\n".join(reply_lines)
