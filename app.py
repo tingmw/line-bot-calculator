@@ -66,23 +66,24 @@ def handle_message(event):
         return
 
     # ====================
-    # 2. 點菜接龍邏輯 (+)
+    # 2. 點菜接龍邏輯 (+ / -)
     # ====================
     if text == '+清空':
         user_orders[user_id] = []
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="已為您清空點菜清單！")
+            TextSendMessage(text="已為您清空接龍！")
         )
         return
 
+    # 新增物品
     elif text.startswith('+'):
         item = text[1:].strip()
         
         if not item:
             line_bot_api.reply_message(
                 event.reply_token,
-                TextSendMessage(text="格式錯誤，請輸入你想點的菜，例如：+雞排")
+                TextSendMessage(text="格式錯誤，請輸入你想接龍的文字，例如：+雞排")
             )
             return
 
@@ -91,7 +92,7 @@ def handle_message(event):
             
         user_orders[user_id].append(item)
 
-        reply_lines = ["目前點菜清單："]
+        reply_lines = ["目前清單："]
         for index, order in enumerate(user_orders[user_id], start=1):
             reply_lines.append(f"{index}. {order}")
             
@@ -101,6 +102,43 @@ def handle_message(event):
             event.reply_token,
             TextSendMessage(text=reply_text)
         )
+        return
+
+    # 刪除物品
+    elif text.startswith('-'):
+        item_to_remove = text[1:].strip()
+        
+        if not item_to_remove:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text="格式錯誤，請輸入你想刪除的文字，例如：-雞排")
+            )
+            return
+
+        # 確保該使用者有清單，且輸入的物品確實存在於清單中
+        if user_id in user_orders and item_to_remove in user_orders[user_id]:
+            # 從陣列中移除該物品
+            user_orders[user_id].remove(item_to_remove)
+            
+            # 判斷移除後清單是否為空
+            if not user_orders[user_id]:
+                reply_text = f"已刪除「{item_to_remove}」，目前清單是空的。"
+            else:
+                reply_lines = ["目前點菜清單："]
+                for index, order in enumerate(user_orders[user_id], start=1):
+                    reply_lines.append(f"{index}. {order}")
+                reply_text = "\n".join(reply_lines)
+                
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=reply_text)
+            )
+        else:
+            # 如果清單不存在，或物品不在清單內
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"找不到該內容喔！目前的清單裡沒有「{item_to_remove}」。")
+            )
         return
 
 if __name__ == "__main__":
